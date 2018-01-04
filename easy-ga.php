@@ -40,7 +40,7 @@ $curldata = array(
  't' => 'pageview',
  'dh' => $host,
  'dp' => '/backend-tracking',
- 'dp' => 'backend tracking'
+ 'dt' => 'backend tracking'
 );
 $curldata = array_merge($curldata, $_POST);
 
