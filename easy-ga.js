@@ -28,6 +28,7 @@ function Tracking() {
   var defaults = {
     'php': 'easy-ga.php',
     'selector': 'a[href$=".opt()"]',
+    'msg_confirm': 1,
     'msg_txt': {
       'opt_in': 'opt-in successfull (tracking active)',
       'opt_out': 'opt-out successfull (tracking stopped)',
@@ -216,26 +217,25 @@ function Tracking() {
     //***Get Link
     var el = document.querySelectorAll(options.selector);
 
-    //***Hide First Span (opt-out/deactivate Text) or Last Span (Opt-in/activate Text) + Set Content
+    //***Hide/Show Span-Tags
     if(document.cookie.indexOf(options.disable_str + '=true') > -1) {
       var child = "last";
     } else {
       var child = "first";
     }
-
     for (i = 0; i < el.length; i++) {
       hide = el[i].querySelectorAll("span:not(:"+child+"-child)");
       show = el[i].querySelector("span:"+child+"-child");
-      hide[0].style.display = "none";
-      hide[1].style.display = "none";
+      for (j = 0; j < hide.length; j++) {
+        hide[j].style.display = "none";
+      }
       show.style.display = "inline";
     }
  
-
     if(options.debug) console.log("updated link text");
 
     //***Show Confirmation Message
-    if(confirm) {
+    if(confirm && options.msg_confirm) {
       confirm_msg(el, options.msg_txt, options.msg_cl, options.msg_time, Boolean(document.cookie.indexOf(options.disable_str + '=true') > -1), options.cookie_vs_browser, options.debug);
     }
   };
