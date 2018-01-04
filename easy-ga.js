@@ -214,7 +214,7 @@ function Tracking() {
   function opt_link(options, confirm) {
 
     //***Get Link
-    var el = document.querySelector(options.selector);
+    var el = document.querySelectorAll(options.selector);
 
     //***Hide First Span (opt-out/deactivate Text) or Last Span (Opt-in/activate Text) + Set Content
     if(document.cookie.indexOf(options.disable_str + '=true') > -1) {
@@ -222,11 +222,15 @@ function Tracking() {
     } else {
       var child = "first";
     }
-    hide = el.querySelectorAll("span:not(:"+child+"-child)");
-    show = el.querySelector("span:"+child+"-child");
-    hide[0].style.display = "none";
-    hide[1].style.display = "none";
-    show.style.display = "inline";
+
+    for (i = 0; i < el.length; i++) {
+      hide = el[i].querySelectorAll("span:not(:"+child+"-child)");
+      show = el[i].querySelector("span:"+child+"-child");
+      hide[0].style.display = "none";
+      hide[1].style.display = "none";
+      show.style.display = "inline";
+    }
+ 
 
     if(options.debug) console.log("updated link text");
 
@@ -241,28 +245,36 @@ function Tracking() {
   //***************
   function confirm_msg(el, opt_msg, opt_msg_cl, opt_msg_t, confirm, cookie_vs_browser, debug){
 
-    //***Get/Create Elements
-    var parent = el.parentNode, new_el = document.createElement('span'), old_el = el;
-
     //***Set Message & Color
     if(confirm) { msg = [opt_msg.opt_out, opt_msg_cl.opt_out]; }
     else { msg = [opt_msg.opt_in, opt_msg_cl.opt_in];
       if(cookie_vs_browser) { msg = [opt_msg.conflict, opt_msg_cl.conflict]; opt_msg_t *= 2; }
     }
-    new_el.innerHTML = msg[0];
-    new_el.style.color = msg[1];
 
-    //***Swap to Confirmation Message
-    parent.replaceChild(new_el, el);
+    //***Create & Show Message
+    var parent = [], old_el = [], new_el = [];
+    for (i = 0; i < el.length; i++) {
+
+      parent.push(el[i].parentNode);
+      new_el.push(document.createElement('span'));
+      old_el.push(el[i]);
+
+      new_el[i].innerHTML = msg[0];
+      new_el[i].style.color = msg[1];
+
+      parent[i].replaceChild(new_el[i], el[i]);
+
+    }
 
     if(debug) console.log("swapped to confirmation messaage, wait "+opt_msg_t+"ms");
 
-    //***Swap Back to Opt-In/Out Link
-    setTimeout(function(){ 
-      parent.replaceChild(old_el, new_el);
+    //***Swap Back to Original Content
+    setTimeout(function() {
+      for (i = 0; i < el.length; i++) {
+        parent[i].replaceChild(old_el[i], new_el[i]);
+      }
       if(debug) console.log("swapped back");
     }, opt_msg_t);
-
   }
 
   //***************
