@@ -41,13 +41,13 @@ function Tracking() {
       'conflict': '#ff0000'
     },
     'msg_time': 2750,
-    'msg_container': '', //***e.g. .msg-ga | if set, no confirmation msg will be shown instead of link
-    'warning': 1,
+    'msg_container': '',
+    'warning': 0,
     'warning_optout': 'Important: There is an Opt-out Cookie saved in your Browser that prevents us from optimizing your experience on our site.',
     'warning_do_not_track': 'Important: There are Do-not-track Settings activated in your Browser which prevent us from optimizing your experience on our site.',
     'warning_both': 'Important: There is an Opt-out Cookie & Do-not-track Settings in your Browser that prevent us from optimizing your experience on our site.',
-    'warning_container': '.warn-ga',
-    'debug': 1
+    'warning_container': '',
+    'debug': 0
   };
   if (arguments[0] && typeof arguments[0] === "object") {
     this.options = extend_defaults(defaults, arguments[0]);
