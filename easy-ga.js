@@ -75,11 +75,12 @@ function Tracking() {
   this.init = function () {
 
     //***Extend Options
+    var action, products, transaction;
     if (arguments[0] && typeof arguments[0] === "object") {
       this.options = extend_defaults(this.options, arguments[0]);
-      if(this.options.track.action) var action = this.options.track.action;
-      if(this.options.track.products) var products = this.options.track.products;
-      if(this.options.track.transaction) var transaction = this.options.track.transaction;
+      if(this.options.track.action) action = this.options.track.action;
+      if(this.options.track.products) products = this.options.track.products;
+      if(this.options.track.transaction) transaction = this.options.track.transaction;
 
       //******************************************************
       //***TO DO: ADD VARS FOR FURTHER TRACKING SCENARIOS HERE
@@ -244,7 +245,7 @@ function Tracking() {
     if (options.opt_link) {
 
       //***Hide/Show Span-Tags
-      var child =""
+      var child = "";
       if(document.cookie.indexOf(options.disable_str + '=true') > -1) {
         child = "last";
       } else {
