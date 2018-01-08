@@ -28,6 +28,7 @@ function Tracking() {
   var defaults = {
     'php': 'easy-ga.php',
     'selector': 'a[href$=".opt()"]',
+    'opt_link': 1,
     'msg_confirm': 1,
     'msg_txt': {
       'opt_in': 'opt-in successfull (tracking active)',
@@ -40,7 +41,13 @@ function Tracking() {
       'conflict': '#ff0000'
     },
     'msg_time': 2750,
-    'debug': 0
+    'msg_container': '', //***e.g. .msg-ga | if set, no confirmation msg will be shown instead of link
+    'warning': 1,
+    'warning_optout': 'Important: There is an Opt-out Cookie saved in your Browser that prevents us from optimizing your experience on our site.',
+    'warning_do_not_track': 'Important: There are Do-not-track Settings activated in your Browser which prevent us from optimizing your experience on our site.',
+    'warning_both': 'Important: There is an Opt-out Cookie & Do-not-track Settings in your Browser that prevent us from optimizing your experience on our site.',
+    'warning_container': '.warn-ga',
+    'debug': 1
   };
   if (arguments[0] && typeof arguments[0] === "object") {
     this.options = extend_defaults(defaults, arguments[0]);
@@ -50,7 +57,7 @@ function Tracking() {
   //***Do Not Track Browser Settings OR Opt-out Cookie active?
   this.options.optout = Boolean(document.cookie.indexOf(this.options.disable_str + '=true') > -1);
   this.options.do_not_track = Boolean(navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack);
-  if((this.options.do_not_track == true) && (this.options.optout == false)) {
+  if((this.options.do_not_track === true) && (this.options.optout === false)) {
     //***Conflict: No Cookie Opt-out, but Blocked by Browser Settings
     this.options.cookie_vs_browser = 1;
   } else {
@@ -59,9 +66,8 @@ function Tracking() {
   }
 
   //***Bind Opt-In/Out Link when DOM Ready
-  if (this.options.opt_link) {
-    ready(this.options);
-  }
+  ready(this.options);
+
 
   //***************
   //***Init Tracking
@@ -82,7 +88,7 @@ function Tracking() {
     }
 
     //***Do Not Track
-    if((this.options.do_not_track == true) || (this.options.optout == true)) {
+    if((this.options.do_not_track === true) || (this.options.optout === true)) {
 
       if(this.options.debug) console.log("optout/do not track");
       window[this.options.disable_str] = true;
@@ -128,7 +134,7 @@ function Tracking() {
     }
 
     //***AdBlocker- & Do Not Track-Ajax Transaction-Tracking
-    if (((!(window.ga && ga.create)) || ((this.options.do_not_track == true) || (this.options.optout == true))) && (action == "purchase")) {
+    if (((!(window.ga && ga.create)) || ((this.options.do_not_track === true) || (this.options.optout === true))) && (action === "purchase")) {
 
       if(this.options.debug) console.log("start ajax tracking");
 
@@ -176,10 +182,10 @@ function Tracking() {
   this.opt = function () {
 
     //***Read Cookie
-    var state = Boolean(document.cookie.indexOf(this.options.disable_str + '=true') > -1);
+    this.options.optout = Boolean(document.cookie.indexOf(this.options.disable_str + '=true') > -1);
 
     //***Opt-In
-    if(state == true) {
+    if(this.options.optout === true) {
 
       document.cookie = this.options.disable_str + '=false; expires=Tue, 16 Apr 1985 16:04:85 UTC; path=/';
       if(this.options.debug) console.log("opt-in cookie");
@@ -197,11 +203,12 @@ function Tracking() {
     window[this.options.disable_str] = this.options.optout;
 
     //***Conflict? No Cookie Opt-out, but Blocked by Browser Settings
-    if((this.options.do_not_track == true) && (this.options.optout == 0)) this.options.cookie_vs_browser = 1;
+    if((this.options.do_not_track === true) && (this.options.optout === false)) this.options.cookie_vs_browser = 1;
     else this.options.cookie_vs_browser = 0;
 
     //***Update Opt-In/Out Link Text & Display Confirmation Message
     if(this.options.opt_link) opt_link(this.options, 1);
+
 
   };
 
@@ -214,31 +221,55 @@ function Tracking() {
   //***************
   function opt_link(options, confirm) {
 
+
+    //***Display Warning
+    if(options.warning) {
+
+      if(options.debug) console.log("warning");
+      var warn = "";
+      var w_el = document.querySelectorAll(options.warning_container);
+      if(options.optout) warn = options.warning_optout;
+      if(options.do_not_track) warn = options.warning_do_not_track;
+      if((options.optout) && (options.do_not_track)) warn = options.warning_both;
+      for (i = 0; i < w_el.length; i++) {
+        w_el[i].innerHTML = warn;
+        if(options.debug) console.log("warning "+i);
+      }
+
+    }
+
     //***Get Link
     var el = document.querySelectorAll(options.selector);
 
-    //***Hide/Show Span-Tags
-    if(document.cookie.indexOf(options.disable_str + '=true') > -1) {
-      var child = "last";
-    } else {
-      var child = "first";
-    }
-    for (i = 0; i < el.length; i++) {
-      hide = el[i].querySelectorAll("span:not(:"+child+"-child)");
-      show = el[i].querySelector("span:"+child+"-child");
-      for (j = 0; j < hide.length; j++) {
-        hide[j].style.display = "none";
+    if (options.opt_link) {
+
+      //***Hide/Show Span-Tags
+      var child =""
+      if(document.cookie.indexOf(options.disable_str + '=true') > -1) {
+        child = "last";
+      } else {
+        child = "first";
       }
-      show.style.display = "inline";
-    }
+      for (i = 0; i < el.length; i++) {
+        hide = el[i].querySelectorAll("span:not(:"+child+"-child)");
+        show = el[i].querySelector("span:"+child+"-child");
+        for (j = 0; j < hide.length; j++) {
+          hide[j].style.display = "none";
+        }
+        show.style.display = "inline";
+      }
  
-    if(options.debug) console.log("updated link text");
+      if(options.debug) console.log("updated link text");
+
+    }
 
     //***Show Confirmation Message
     if(confirm && options.msg_confirm) {
+      if(options.msg_container) el = document.querySelectorAll(options.msg_container);
       confirm_msg(el, options.msg_txt, options.msg_cl, options.msg_time, Boolean(document.cookie.indexOf(options.disable_str + '=true') > -1), options.cookie_vs_browser, options.debug);
     }
-  };
+
+  }
 
   //***************
   //***Show Opt-In/Out Confirmation Message
