@@ -46,8 +46,10 @@ function Tracking() {
     'warning_optout': 'Important: There is an Opt-out Cookie saved in your Browser that prevents us from optimizing your experience on our site.',
     'warning_do_not_track': 'Important: There are Do-not-track Settings activated in your Browser which prevent us from optimizing your experience on our site.',
     'warning_both': 'Important: There is an Opt-out Cookie & Do-not-track Settings in your Browser that prevent us from optimizing your experience on our site.',
+    'warning_adblock': 'Important: Using AdBlockers is like Stealing Pocket Money from Children in Primary School.',
     'warning_container': '',
-    'debug': 0
+    'debug': 0,
+    'adblock': 0
   };
   if (arguments[0] && typeof arguments[0] === "object") {
     this.options = extend_defaults(defaults, arguments[0]);
@@ -108,6 +110,9 @@ function Tracking() {
       ga('require', 'ec');
       ga('set', 'anonymizeIp', true);
 
+      //***Detect AdBlocker
+      if(!(window.ga && ga.create)) this.options.adblock = 1;
+
       //***Purchase-Transaction
       if(action == "purchase") {
 
@@ -135,7 +140,7 @@ function Tracking() {
     }
 
     //***AdBlocker- & Do Not Track-Ajax Transaction-Tracking
-    if (((!(window.ga && ga.create)) || ((this.options.do_not_track === true) || (this.options.optout === true))) && (action === "purchase")) {
+    if (((this.options.adblock) || ((this.options.do_not_track === true) || (this.options.optout === true))) && (action === "purchase")) {
 
       if(this.options.debug) console.log("start ajax tracking");
 
@@ -210,7 +215,6 @@ function Tracking() {
     //***Update Opt-In/Out Link Text & Display Confirmation Message
     if(this.options.opt_link) opt_link(this.options, 1);
 
-
   };
 
   //******************************************************
@@ -222,7 +226,6 @@ function Tracking() {
   //***************
   function opt_link(options, confirm) {
 
-
     //***Display Warning
     if(options.warning) {
 
@@ -232,6 +235,7 @@ function Tracking() {
       if(options.optout) warn = options.warning_optout;
       if(options.do_not_track) warn = options.warning_do_not_track;
       if((options.optout) && (options.do_not_track)) warn = options.warning_both;
+      if(options.adblock) warn = options.warning_adblock;
       for (i = 0; i < w_el.length; i++) {
         w_el[i].innerHTML = warn;
         if(options.debug) console.log("warning "+i);
@@ -307,6 +311,7 @@ function Tracking() {
       }
       if(debug) console.log("swapped back");
     }, opt_msg_t);
+      
   }
 
   //***************
