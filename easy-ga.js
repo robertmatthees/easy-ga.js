@@ -45,7 +45,7 @@ function Tracking() {
     'warning': 0,
     'warning_optout': 'Important: There is an Opt-out Cookie saved in your Browser that prevents us from optimizing your experience on our site.',
     'warning_do_not_track': 'Important: There are Do-not-track Settings activated in your Browser which prevent us from optimizing your experience on our site.',
-    'warning_both': 'Important: There is an Opt-out Cookie & Do-not-track Settings in your Browser that prevent us from optimizing your experience on our site.',
+    'warning_both': 'Important: There is an Opt-out Cookie saved in your Browser & Do-not-track Settings which prevent us from optimizing your experience on our site.',
     'warning_adblock': 'Important: Using AdBlockers is like Stealing Pocket Money from Children in Primary School.',
     'warning_container': '',
     'debug': 0,
