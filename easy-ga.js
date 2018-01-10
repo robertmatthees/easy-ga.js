@@ -51,7 +51,7 @@ function Tracking() {
     'debug': 0,
     'adblock': 0
   };
-  if (arguments[0] && typeof arguments[0] === "object") {
+  if(arguments[0] && typeof arguments[0] === "object") {
     this.options = extend_defaults(defaults, arguments[0]);
   }
   this.options.disable_str = "ga-disable-" + this.options.property;
@@ -67,9 +67,8 @@ function Tracking() {
     this.options.cookie_vs_browser = 0;
   }
 
-  //***Bind Opt-In/Out Link when DOM Ready
+  //***Continue When DOM Ready
   ready(this.options);
-
 
   //***************
   //***Init Tracking
@@ -77,8 +76,8 @@ function Tracking() {
   this.init = function () {
 
     //***Extend Options
-    var action, products, transaction;
-    if (arguments[0] && typeof arguments[0] === "object") {
+    var action, products, transaction, i, ga;
+    if(arguments[0] && typeof arguments[0] === "object") {
       this.options = extend_defaults(this.options, arguments[0]);
       if(this.options.track.action) action = this.options.track.action;
       if(this.options.track.products) products = this.options.track.products;
@@ -117,16 +116,15 @@ function Tracking() {
       if(action == "purchase") {
 
         //***Add Products
-        for (i = 0; i < products.length; i++) {
-
-          if(this.options.debug) console.log("product"+(i+1)+" added");
+        for(i = 0; i < products.length; i++) {
           ga('ec:addProduct', products[i]);
-
+          if(this.options.debug) console.log("product"+(i+1)+" added");
         }
 
         //***Add Transactions
-        if(this.options.debug) console.log("set purchase");
         ga('ec:setAction', 'purchase', transaction);
+        if(this.options.debug) console.log("set purchase");
+
       }
 
       //******************************************************
@@ -134,8 +132,8 @@ function Tracking() {
       //******************************************************
 
       //***Send Pageview
-      if(this.options.debug) console.log("pageview sent");
       ga('send', 'pageview');
+      if(this.options.debug) console.log("pageview sent");
 
     }
 
@@ -148,10 +146,7 @@ function Tracking() {
       var postdata = "tid="+this.options.property+"&pa=purchase";
 
       //***Add Products to Data Set
-      for (i = 0; i < products.length; i++) {
-
-        if(this.options.debug) console.log("product"+(i+1)+" added");
-
+      for(i = 0; i < products.length; i++) {
         postdata += "&pr"+(i+1)+"id="+products[i].id + "&pr"+(i+1)+"nm="+products[i].name;
         if(products[i].brand) postdata += "&pr"+(i+1)+"br="+products[i].brand;
         if(products[i].category) postdata += "&pr"+(i+1)+"ca="+products[i].category;
@@ -159,27 +154,27 @@ function Tracking() {
         if(products[i].price) postdata += "&pr"+(i+1)+"pr="+products[i].price;
         if(products[i].quantity) postdata += "&pr"+(i+1)+"qt="+products[i].quantity;
         if(products[i].coupon) postdata += "&pr"+(i+1)+"cc="+products[i].coupon;
-
+        if(this.options.debug) console.log("product"+(i+1)+" added");
       }
 
       //***Add Transaction Info to Data Set
-      if(this.options.debug) console.log("transaction added");
-
       postdata += "&ti="+transaction.id;
       if(transaction.affiliation) postdata += "&ta="+transaction.affiliation;
       if(transaction.revenue) postdata += "&tr="+transaction.revenue;
       if(transaction.tax) postdata += "&tt="+transaction.tax;
       if(transaction.shipping) postdata += "&ts="+transaction.shipping;
       if(transaction.coupon) postdata += "&tcc="+transaction.coupon;
+      if(this.options.debug) console.log("transaction added");
 
       //***Ajax Call
-      if(this.options.debug) console.log("ajax call");
       var xhttp = new XMLHttpRequest();
       xhttp.open("POST", this.options.php, true);
       xhttp.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
       xhttp.send(postdata);
+      if(this.options.debug) console.log("ajax call");
 
     }
+
   };
 
   //***************
@@ -187,7 +182,7 @@ function Tracking() {
   //***************
   this.opt = function () {
 
-    //***Read Cookie
+    //***Read Cookie & Update Info
     this.options.optout = Boolean(document.cookie.indexOf(this.options.disable_str + '=true') > -1);
 
     //***Opt-In
@@ -226,52 +221,53 @@ function Tracking() {
   //***************
   function opt_link(options, confirm) {
 
+    var i, el = document.querySelectorAll(options.selector);
+
     //***Display Warning
     if(options.warning) {
 
-      if(options.debug) console.log("warning");
-      var warn = "";
-      var w_el = document.querySelectorAll(options.warning_container);
+      var warn = "", w_el = document.querySelectorAll(options.warning_container);
+
+      //***Set Warning Message
       if(options.optout) warn = options.warning_optout;
       if(options.do_not_track) warn = options.warning_do_not_track;
       if((options.optout) && (options.do_not_track)) warn = options.warning_both;
       if(options.adblock) warn = options.warning_adblock;
-      for (i = 0; i < w_el.length; i++) {
+
+      //***Display Warning
+      for(i = 0; i < w_el.length; i++) {
         w_el[i].innerHTML = warn;
-        if(options.debug) console.log("warning "+i);
+        if(options.debug) console.log("warning "+(i+1));
       }
 
     }
 
-    //***Get Link
-    var el = document.querySelectorAll(options.selector);
-
+    //***Update Anchor Text 
     if (options.opt_link) {
 
+      var child = "", hide, show, j;
+
+      //***Span-Tags to Hide/Show
+      if(options.optout) child = "last";
+      else child = "first";
+
       //***Hide/Show Span-Tags
-      var child = "";
-      if(document.cookie.indexOf(options.disable_str + '=true') > -1) {
-        child = "last";
-      } else {
-        child = "first";
-      }
-      for (i = 0; i < el.length; i++) {
+      for(i = 0; i < el.length; i++) {
         hide = el[i].querySelectorAll("span:not(:"+child+"-child)");
         show = el[i].querySelector("span:"+child+"-child");
-        for (j = 0; j < hide.length; j++) {
+        for(j = 0; j < hide.length; j++) {
           hide[j].style.display = "none";
         }
         show.style.display = "inline";
+        if(options.debug) console.log("updated anchor text "+(i+1));
       }
- 
-      if(options.debug) console.log("updated link text");
 
     }
 
     //***Show Confirmation Message
     if(confirm && options.msg_confirm) {
       if(options.msg_container) el = document.querySelectorAll(options.msg_container);
-      confirm_msg(el, options.msg_txt, options.msg_cl, options.msg_time, Boolean(document.cookie.indexOf(options.disable_str + '=true') > -1), options.cookie_vs_browser, options.debug);
+      confirm_msg(el, options.msg_txt, options.msg_cl, options.msg_time, options.optout, options.cookie_vs_browser, options.debug);
     }
 
   }
@@ -281,6 +277,8 @@ function Tracking() {
   //***************
   function confirm_msg(el, opt_msg, opt_msg_cl, opt_msg_t, confirm, cookie_vs_browser, debug){
 
+    var msg, i, parent = [], old_el = [], new_el = [];
+
     //***Set Message & Color
     if(confirm) { msg = [opt_msg.opt_out, opt_msg_cl.opt_out]; }
     else { msg = [opt_msg.opt_in, opt_msg_cl.opt_in];
@@ -288,28 +286,22 @@ function Tracking() {
     }
 
     //***Create & Show Message
-    var parent = [], old_el = [], new_el = [];
-    for (i = 0; i < el.length; i++) {
-
+    for(i = 0; i < el.length; i++) {
       parent.push(el[i].parentNode);
       new_el.push(document.createElement('span'));
       old_el.push(el[i]);
-
       new_el[i].innerHTML = msg[0];
       new_el[i].style.color = msg[1];
-
       parent[i].replaceChild(new_el[i], el[i]);
-
+      if(debug) console.log("swapped to confirmation messaage "+(i+1)+" (wait "+opt_msg_t+"ms)");
     }
-
-    if(debug) console.log("swapped to confirmation messaage, wait "+opt_msg_t+"ms");
 
     //***Swap Back to Original Content
     setTimeout(function() {
-      for (i = 0; i < el.length; i++) {
+      for(i = 0; i < el.length; i++) {
         parent[i].replaceChild(old_el[i], new_el[i]);
+        if(debug) console.log("swapped back "+(i+1));
       }
-      if(debug) console.log("swapped back");
     }, opt_msg_t);
       
   }
@@ -321,7 +313,7 @@ function Tracking() {
     if(document.readyState != 'loading') opt_link(options);
     else if(document.addEventListener) document.addEventListener('DOMContentLoaded', function() { opt_link(options); });
     else document.attachEvent('onreadystatechange', function() {
-        if (document.readyState=='complete') opt_link(options);
+        if(document.readyState=='complete') opt_link(options);
     });
   }
 
