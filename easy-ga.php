@@ -5,7 +5,7 @@
     Supporting Enhanced Ecommerce Transactions (EC)
     & Respecting Data Privacy User Choices
     (Do-not-track Browser Settings & Opt-out Cookies)
-    Docs: https://www.robert-matthees.de/ecommerce/easy-ga
+    Docs: https://www.robert-matthees.de/ecommerce/easy-ga/
 
     Copyright (C) 2018 Robert Matthees (contact: www.robert-matthees.de)
 
