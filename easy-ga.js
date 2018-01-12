@@ -4,7 +4,7 @@
     Supporting Enhanced Ecommerce Transactions (EC)
     & Respecting Data Privacy User Choices
     (Do-not-track Browser Settings & Opt-out Cookies)
-    Docs: https://www.robert-matthees.de/ecommerce/easy-ga
+    Docs: https://www.robert-matthees.de/ecommerce/easy-ga/
 
     Copyright (C) 2018 Robert Matthees (contact: www.robert-matthees.de)
 
@@ -28,18 +28,19 @@ function Tracking() {
   var defaults = {
     'php': 'easy-ga.php',
     'selector': 'a[href$=".opt()"]',
+    'default_optout': 0,
     'opt_link': 1,
     'msg_confirm': 1,
-    'msg_txt': {
-      'opt_in': 'opt-in successfull (tracking active)',
-      'opt_out': 'opt-out successfull (tracking stopped)',
-      'conflict': 'cookie opt-in, but -do not track- browser settings (still no tracking)'
-    },
-    'msg_cl': {
-      'opt_in': '#ffa501',
-      'opt_out': '#009400',
-      'conflict': '#ff0000'
-    },
+    'msg_txt_opt_in': 'opt-in successfull (tracking active)',
+    'msg_txt_opt_out': 'opt-out successfull (tracking stopped)',
+    'msg_txt_conflict': 'cookie opt-in, but -do not track- browser settings (still no tracking)',
+    'msg_txt_no_cookie': 'you need to enable cookies in your browser settings to use this feature',
+    'msg_txt_no_cookie_optout': 'you need to enable cookies in your browser settings to use this feature (tracking disabled by default)',
+    'msg_cl_opt_in': '#ffa501',
+    'msg_cl_opt_out': '#009400',
+    'msg_cl_conflict': '#ff0000',
+    'msg_cl_no_cookie': '#ff0000',
+    'msg_cl_no_cookie_optout': '#ff0000',
     'msg_time': 2750,
     'msg_container': '',
     'warning': 0,
@@ -47,6 +48,7 @@ function Tracking() {
     'warning_do_not_track': 'Important: There are Do-not-track Settings activated in your Browser which prevent us from optimizing your experience on our site.',
     'warning_both': 'Important: There is an Opt-out Cookie saved in your Browser & Do-not-track Settings which prevent us from optimizing your experience on our site.',
     'warning_adblock': 'Important: Using AdBlockers is like Stealing Pocket Money from Children in Primary School.',
+    'warning_cookies_disabled': 'Please enable Cookies in your Browser Settings to enjoy all features on our site.',
     'warning_container': '',
     'debug': 0,
     'adblock': 0
@@ -65,6 +67,23 @@ function Tracking() {
   } else {
     //***No Conflict
     this.options.cookie_vs_browser = 0;
+  }
+  //***Default Opt-out
+  if(this.options.default_optout) {
+    //***Set Cookie if none
+    if(!this.options.optout) {
+      document.cookie = this.options.disable_str + '=true; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
+      this.options.optout = 1;
+      if(this.options.debug) console.log("opt-out cookie");
+    }
+  }
+  //***Default Opt-out & Cookies Disabled
+  if(this.options.default_optout && !navigator.cookieEnabled)
+  {
+    this.options.no_cookie = 1;
+    if(this.options.debug) console.log("default optout, but cookies disabled");
+  } else {
+    this.options.no_cookie = 0;
   }
 
   //***Continue When DOM Ready
@@ -90,9 +109,9 @@ function Tracking() {
     }
 
     //***Do Not Track
-    if((this.options.do_not_track === true) || (this.options.optout === true)) {
+    if(this.options.do_not_track || this.options.optout || this.options.no_cookie) {
 
-      if(this.options.debug) console.log("optout/do not track");
+      if(this.options.debug) console.log("optout/do not track/no cookie");
       window[this.options.disable_str] = true;
 
     } else {
@@ -137,8 +156,8 @@ function Tracking() {
 
     }
 
-    //***AdBlocker- & Do Not Track-Ajax Transaction-Tracking
-    if (((this.options.adblock) || ((this.options.do_not_track === true) || (this.options.optout === true))) && (action === "purchase")) {
+    //***Ajax Transaction-Tracking for AdBlocker-, Do Not Track- & Default Optout+Cookies Disabled
+    if ((this.options.adblock || this.options.do_not_track || this.options.optout || this.options.no_cookie) && (action == "purchase")) {
 
       if(this.options.debug) console.log("start ajax tracking");
 
@@ -187,8 +206,8 @@ function Tracking() {
 
     //***Opt-In
     if(this.options.optout === true) {
-
-      document.cookie = this.options.disable_str + '=false; expires=Tue, 16 Apr 1985 16:04:85 UTC; path=/';
+      
+      document.cookie = this.options.disable_str + '=false; expires=Thu, 31 Dec 2099 23:59:59 UTC; path=/';
       if(this.options.debug) console.log("opt-in cookie");
 
     } else {
@@ -233,6 +252,7 @@ function Tracking() {
       if(options.do_not_track) warn = options.warning_do_not_track;
       if((options.optout) && (options.do_not_track)) warn = options.warning_both;
       if(options.adblock) warn = options.warning_adblock;
+      if(!navigator.cookieEnabled) warn = options.warning_cookies_disabled;
 
       //***Display Warning
       for(i = 0; i < w_el.length; i++) {
@@ -265,24 +285,28 @@ function Tracking() {
     }
 
     //***Show Confirmation Message
-    if(confirm && options.msg_confirm) {
-      if(options.msg_container) el = document.querySelectorAll(options.msg_container);
-      confirm_msg(el, options.msg_txt, options.msg_cl, options.msg_time, options.optout, options.cookie_vs_browser, options.debug);
-    }
+    if(confirm && options.msg_confirm) confirm_msg(el, options);
 
   }
 
   //***************
   //***Show Opt-In/Out Confirmation Message
   //***************
-  function confirm_msg(el, opt_msg, opt_msg_cl, opt_msg_t, confirm, cookie_vs_browser, debug){
+  function confirm_msg(el, options) {
 
     var msg, i, parent = [], old_el = [], new_el = [];
+    if(options.msg_container) el = document.querySelectorAll(options.msg_container);
 
     //***Set Message & Color
-    if(confirm) { msg = [opt_msg.opt_out, opt_msg_cl.opt_out]; }
-    else { msg = [opt_msg.opt_in, opt_msg_cl.opt_in];
-      if(cookie_vs_browser) { msg = [opt_msg.conflict, opt_msg_cl.conflict]; opt_msg_t *= 2; }
+    if(options.optout) {
+      msg = [options.msg_txt_opt_out, options.msg_cl_opt_out];
+    } else {
+      msg = [options.msg_txt_opt_in, options.msg_cl_opt_in];
+      if(options.cookie_vs_browser) { msg = [options.msg_txt_conflict, options.msg_cl_conflict]; options.msg_time *= 2; }
+    }
+    if(!navigator.cookieEnabled) {
+      msg = [options.msg_txt_no_cookie, options.msg_cl_no_cookie]; options.msg_time *= 2;
+      if(options.default_optout) msg = [options.msg_txt_no_cookie_optout, options.msg_cl_no_cookie_optout];
     }
 
     //***Create & Show Message
@@ -293,17 +317,17 @@ function Tracking() {
       new_el[i].innerHTML = msg[0];
       new_el[i].style.color = msg[1];
       parent[i].replaceChild(new_el[i], el[i]);
-      if(debug) console.log("swapped to confirmation messaage "+(i+1)+" (wait "+opt_msg_t+"ms)");
+      if(options.debug) console.log("swapped to confirmation messaage "+(i+1)+" (wait "+options.msg_time+"ms)");
     }
 
     //***Swap Back to Original Content
     setTimeout(function() {
       for(i = 0; i < el.length; i++) {
         parent[i].replaceChild(old_el[i], new_el[i]);
-        if(debug) console.log("swapped back "+(i+1));
+        if(options.debug) console.log("swapped back "+(i+1));
       }
-    }, opt_msg_t);
-      
+    }, options.msg_time);
+
   }
 
   //***************
@@ -322,12 +346,11 @@ function Tracking() {
   //***************
   function extend_defaults(source, properties) {
     var property;
-    for (property in properties) {
-      if (properties.hasOwnProperty(property)) {
+    for(property in properties) {
+      if(properties.hasOwnProperty(property)) {
         source[property] = properties[property];
       }
     }
     return source;
   }
-
 }
